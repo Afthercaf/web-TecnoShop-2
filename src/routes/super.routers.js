@@ -1,7 +1,7 @@
 import express from 'express';
 import Stripe from 'stripe';
 import { Compra } from "../models/Pedidos.model.js";
-import { Producto } from '../models/Productos.model.js';
+import { Producto } from '../models/productos.model.js';
 import { Tienda } from '../models/venderos.model.js';
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config.js";

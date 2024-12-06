@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../../api/axios";
+import { motion } from 'framer-motion';
 import Sidebar from "./components/Sidebar";
 
 const SubscriptionStatus = () => {
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cardSaved, setCardSaved] = useState(false);
+  const [cardDetails, setCardDetails] = useState({
+    cardName: "",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCVV: "",
+  });
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
@@ -20,7 +28,46 @@ const SubscriptionStatus = () => {
     };
 
     fetchSubscriptionStatus();
+
+    // Verifica si la tarjeta ya está guardada en localStorage
+    const savedCard = localStorage.getItem("sellerCard");
+    if (savedCard) {
+      setCardSaved(true);
+    }
   }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCardDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
+  };
+
+  const saveCard = () => {
+    const { cardName, cardNumber, cardExpiry, cardCVV } = cardDetails;
+
+    // Validación básica
+    if (!cardName || !cardNumber || !cardExpiry || !cardCVV) {
+      alert("Por favor completa todos los campos.");
+      return;
+    }
+
+    if (cardNumber.length !== 16 || isNaN(cardNumber)) {
+      alert("El número de tarjeta debe tener 16 dígitos.");
+      return;
+    }
+
+    if (cardCVV.length !== 3 || isNaN(cardCVV)) {
+      alert("El CVV debe tener 3 dígitos.");
+      return;
+    }
+
+    // Guarda la tarjeta en localStorage
+    localStorage.setItem("sellerCard", JSON.stringify(cardDetails));
+    setCardSaved(true);
+    alert("Tarjeta guardada correctamente.");
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -78,25 +125,69 @@ const SubscriptionStatus = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <p className="text-xs text-gray-600 mb-1">Fecha de Expiración</p>
-            <p className="font-semibold text-gray-800">
-              {new Date(subscriptionData.subscriptionExpirationDate).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <p className="text-xs text-gray-600 mb-1">Plan Actual</p>
-            <p className="font-semibold text-gray-800">Estándar</p>
-          </div>
-        </div>
+        {!cardSaved ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nombre en la tarjeta</label>
+              <input
+                type="text"
+                name="cardName"
+                value={cardDetails.cardName}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              />
+            </div>
 
-        <button 
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          onClick={() => {/* Implementar lógica de renovación */}}
-        >
-          Renovar Suscripción
-        </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Número de tarjeta</label>
+              <input
+                type="text"
+                name="cardNumber"
+                value={cardDetails.cardNumber}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                maxLength="16"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Fecha de expiración</label>
+                <input
+                  type="text"
+                  name="cardExpiry"
+                  value={cardDetails.cardExpiry}
+                  onChange={handleInputChange}
+                  placeholder="MM/YY"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">CVV</label>
+                <input
+                  type="text"
+                  name="cardCVV"
+                  value={cardDetails.cardCVV}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  maxLength="3"
+                />
+              </div>
+            </div>
+
+            <button 
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={saveCard}
+            >
+              Guardar Tarjeta
+            </button>
+          </div>
+        ) : (
+          <p className="text-center text-green-600 font-medium">
+            Tarjeta guardada correctamente
+          </p>
+        )}
       </div>
     </section>
   );
